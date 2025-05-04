@@ -233,19 +233,20 @@ class C4Board(Board):
         one = str(player)
         # a row of 5 gives a score of +150, a row of 6 gives +200, etc...
         # a row of 4 still gives +100
-        if window.count(one) >= 4:
-            score += 100 #+ (50 * window.count(one))
+        if window.count(one) == 4:
+            score += 500 #If you see the winning move, TAKE IT
         # potential win (3 of 4 taken with other one being open ('E')
         elif window.count(one) == 3 and window.count(str(C4Piece.E)) == 1:
             score += 50
         # potential win (2 of 4 taken with other two being open ('E')
         elif window.count(one) == 2 and window.count(str(C4Piece.E)) == 2:
-            score += 10
+            score += 3
+            # CHANGE: A value of 10 was causing the AI to massively overvalue two-long strings
             
         # checks for pessimistic outcomes for one (good for other)
         other = str(player.opposite)
-        if window.count(other) >= 4:
-            score -= 95 + 200 - (50 * window.count(other))
+        if window.count(other) == 4:
+            score -= 95
         elif window.count(other) == 3 and window.count(str(C4Piece.E)) == 1:
             score -= 80
         elif window.count(other) == 2 and window.count(str(C4Piece.E)) == 2:
