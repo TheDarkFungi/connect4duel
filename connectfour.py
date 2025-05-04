@@ -234,7 +234,7 @@ class C4Board(Board):
         # a row of 5 gives a score of +150, a row of 6 gives +200, etc...
         # a row of 4 still gives +100
         if window.count(one) == 4:
-            score += 500 #If you see the winning move, TAKE IT
+            score += 200 #If you see the winning move, TAKE IT
         # potential win (3 of 4 taken with other one being open ('E')
         elif window.count(one) == 3 and window.count(str(C4Piece.E)) == 1:
             score += 50
@@ -245,12 +245,16 @@ class C4Board(Board):
             
         # checks for pessimistic outcomes for one (good for other)
         other = str(player.opposite)
-        if window.count(other) == 4:
-            score -= 95
+        # REMOVED: We don't need to check if window.count(other) == 4, because then we've already lost
+        if window.count(one) == 4:
+            score -= 195
         elif window.count(other) == 3 and window.count(str(C4Piece.E)) == 1:
             score -= 80
         elif window.count(other) == 2 and window.count(str(C4Piece.E)) == 2:
             score -= 5
+
+        # -10   -18   -15   -15   32   32   -9
+        # -10   -18   -15   -15   -28   -23   -9
         
         # checks for blocking other's potential progress if "both ends" open
 
@@ -260,11 +264,12 @@ class C4Board(Board):
                 if window[n] != other:
                     filledMiddle = False
 
+        
         if (window[0] == str(C4Piece.E) and
-            filledMiddle and
+            window[1] == other and window[2] == other and
             window[SEGMENT_LENGTH - 1] == str(C4Piece.E) ):
             
-            score -= 80
+            score -= 0
       
         
         #print(f"Player {Piece}: score = {score}")

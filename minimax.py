@@ -79,6 +79,7 @@ def find_best_move(board: Board, max_depth: int = 3) -> Move:
     # Set it to a score that is impossible to accomplish naturally
     best_score = -4.04
     best_move = None
+    best_moves = []
     
     for move in board.legal_moves:
         score = alphabeta(
@@ -90,13 +91,16 @@ def find_best_move(board: Board, max_depth: int = 3) -> Move:
         if score > best_score:
             best_score = score
             best_move = move
+            best_moves = []
+        if score == best_score:
+            best_moves.append(move)
     print("| Best score: ", best_score)
 
 
     if best_move is None:
         # hmmmm? if get here then punt:  try to play in the middle of the board if possible
         for index in [3, 2, 4, 1, 5, 0, 6]:
-            if index in board.legal_moves:
+            if index in board.legal_moves and index in best_moves:
                 return Move(index)
 
     return best_move
