@@ -75,12 +75,17 @@ def alphabeta(board: Board, maximizing: bool, original_player: Piece, max_depth:
 # looking up to max_depth ahead
 def find_best_move(board: Board, max_depth: int = 3) -> Move:
     # initialize result and move, respectively
-    best_score, best_move = 0, None
+    # We want best_score to be set to the value of row 1 to start.
+    # Set it to a score that is impossible to accomplish naturally
+    best_score = -4.04
+    best_move = None
     
     for move in board.legal_moves:
         score = alphabeta(
             board=board.move(location=move), maximizing=True, original_player=board.turn, max_depth=max_depth
         )
+        if best_score == -4.04:
+            best_score = score
         print(score, end='   ')
         if score > best_score:
             best_score = score
