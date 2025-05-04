@@ -81,9 +81,12 @@ def find_best_move(board: Board, max_depth: int = 3) -> Move:
         score = alphabeta(
             board=board.move(location=move), maximizing=True, original_player=board.turn, max_depth=max_depth
         )
+        print(score, end='   ')
         if score > best_score:
             best_score = score
             best_move = move
+    print("| Best score: ", best_score)
+
 
     if best_move is None:
         # hmmmm? if get here then punt:  try to play in the middle of the board if possible

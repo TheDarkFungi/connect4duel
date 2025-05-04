@@ -125,8 +125,8 @@ class C4Board(Board):
     @property
     def is_win(self) -> bool:
         # save the two possible winning conditions (runs of four), e.g. "BBBB"
-        win_one = 4 * f"{self.turn}"
-        win_two = 4 * f"{self.turn.opposite}"
+        win_one = self.SEGMENT_LENGTH * f"{self.turn}"
+        win_two = self.SEGMENT_LENGTH * f"{self.turn.opposite}"
 
         # check columns
         for column in self.position:
@@ -143,14 +143,14 @@ class C4Board(Board):
                 return True
 
         # check positive slope (lower-left to upper-right)
-        for i in range(self.NUM_COLUMNS - 3):
+        for i in range(self.NUM_COLUMNS - self.SEGMENT_LENGTH + 1):
             for j in range(self.NUM_ROWS - 3):
                 check = "".join([self.position[i + k][j + k].value for k in range(4)])
                 if (win_one == check or win_two == check):
                     return True
 
         # check negative slope (upper-left to lower-right)
-        for i in range(self.NUM_COLUMNS - 3):
+        for i in range(self.NUM_COLUMNS - self.SEGMENT_LENGTH + 1):
             for j in range(3, self.NUM_ROWS):
                 check = "".join([self.position[i + k][j - k].value for k in range(4)])
                 if (win_one == check or win_two == check):
@@ -194,9 +194,9 @@ class C4Board(Board):
             column = [column[i].value for i in range(self.NUM_ROWS)]
             
             # snag the 3 slices of size 4 and score each "run" (evaluate that "window")
-            for index in range(self.NUM_ROWS - 3):
+            for index in range(self.NUM_ROWS - self.SEGMENT_LENGTH + 1):
                 window = column[index: index + window_length]
-                score += self.evaluate_window(window=window, player=player)
+                score += self.evaluate_window(window=window, player=player, SEGMENT_LENGTH=self.SEGMENT_LENGTH)
 
         # check rows
         for i in range(self.NUM_ROWS):
@@ -204,35 +204,37 @@ class C4Board(Board):
             row = [column[i].value for column in self.position]
             
             # snag the 4 slices of size 4 and score each "run"
-            for index in range(self.NUM_COLUMNS - 3):
+            for index in range(self.NUM_COLUMNS - self.SEGMENT_LENGTH + 1):
                 window = row[index: index + window_length]
-                score += self.evaluate_window(window=window, player=player)
+                score += self.evaluate_window(window=window, player=player, SEGMENT_LENGTH=self.SEGMENT_LENGTH)
 
         # check positive slope
-        for i in range(self.NUM_COLUMNS - 3):
-            for j in range(self.NUM_ROWS - 3):
+        for i in range(self.NUM_COLUMNS - self.SEGMENT_LENGTH + 1):
+            for j in range(self.NUM_ROWS - self.SEGMENT_LENGTH + 1):
                 window = [self.position[i + k][j + k].value for k in range(window_length)]
-                score += self.evaluate_window(window=window, player=player)
+                score += self.evaluate_window(window=window, player=player, SEGMENT_LENGTH=self.SEGMENT_LENGTH)
 
         # check negative slope
-        for i in range(self.NUM_COLUMNS - 3):
+        for i in range(self.NUM_COLUMNS - self.SEGMENT_LENGTH + 1):
             for j in range(3, self.NUM_ROWS):
                 window = [self.position[i + k][j - k].value for k in range(window_length)]
-                score += self.evaluate_window(window=window, player=player)
+                score += self.evaluate_window(window=window, player=player, SEGMENT_LENGTH=self.SEGMENT_LENGTH)
 
         return score
 
     # ---------------------------------------------------------------------------
     @staticmethod
-    def evaluate_window(window: List[str], player: Piece) -> int:
+    def evaluate_window(window: List[str], player: Piece, SEGMENT_LENGTH: int) -> int:
         score = 0
         
         # Note: scores are *very* arbitrary ... and need some love ...
 
         # checks for optimistic potentials for "one" (current) player
         one = str(player)
-        if window.count(one) == 4:
-            score += 100
+        # a row of 5 gives a score of +150, a row of 6 gives +200, etc...
+        # a row of 4 still gives +100
+        if window.count(one) >= 4:
+            score += 100 #+ (50 * window.count(one))
         # potential win (3 of 4 taken with other one being open ('E')
         elif window.count(one) == 3 and window.count(str(C4Piece.E)) == 1:
             score += 50
@@ -242,17 +244,24 @@ class C4Board(Board):
             
         # checks for pessimistic outcomes for one (good for other)
         other = str(player.opposite)
-        if window.count(other) == 4:
-            score -= 95
+        if window.count(other) >= 4:
+            score -= 95 + 200 - (50 * window.count(other))
         elif window.count(other) == 3 and window.count(str(C4Piece.E)) == 1:
             score -= 80
         elif window.count(other) == 2 and window.count(str(C4Piece.E)) == 2:
             score -= 5
         
         # checks for blocking other's potential progress if "both ends" open
+
+        filledMiddle = True
+        if SEGMENT_LENGTH > 2: #Checks every middle slot in the window
+            for n in range(1,SEGMENT_LENGTH - 2):
+                if window[n] != other:
+                    filledMiddle = False
+
         if (window[0] == str(C4Piece.E) and
-            window[1] == other and window[2] == other and
-            window[3] == str(C4Piece.E) ):
+            filledMiddle and
+            window[SEGMENT_LENGTH - 1] == str(C4Piece.E) ):
             
             score -= 80
       

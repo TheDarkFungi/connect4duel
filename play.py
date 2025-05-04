@@ -85,6 +85,7 @@ def main():
             savedMoves.append(move)
             board = board.move(location=move)
             
+        
         print(f"\n{board}\n")
         
     # end while game continues ...
